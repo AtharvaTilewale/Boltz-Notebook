@@ -1,5 +1,5 @@
 import requests, datetime, uuid
-from zoneinfo import ZoneInfo   # Python 3.9+
+from zoneinfo import ZoneInfo
 
 # ==== CONFIG ====
 LOG_URL = "https://script.google.com/macros/s/AKfycbzbmG4_CJlFIlpQMqzPWkg9LqcH6XshSiBS7iGjaDOq-tjuPtoXEcRpYpupwEih3hcv/exec"   # <-- Replace with your Apps Script URL
