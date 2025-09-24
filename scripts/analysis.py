@@ -373,10 +373,6 @@ try:
             affinity_section_html=affinity_html
         )
         display(HTML(final_html))
-        
-        # 4. Print confirmation message
-        print(f"✅ Report generated successfully.")
-        print(f"ℹ️ All plot images have been saved to: {plots_dir}")
 
 except FileNotFoundError as e:
     print(f"Error: A required file was not found. {e}")
