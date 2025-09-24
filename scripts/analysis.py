@@ -111,7 +111,7 @@ def create_analysis_card(ax: plt.Axes, title: str, prob: float, aff_val: float, 
     ax.text(0.5, 0.28, f"Predicted IC₅₀: {ic50:.2f} µM", ha="center", va="center", fontsize=14, fontweight="bold", transform=ax.transAxes)
     ax.text(0.5, 0.21, f"ΔG: {delta_g:.2f} kcal/mol", ha="center", va="center", fontsize=14, transform=ax.transAxes)
 
-    meter_y_pos, meter_range = 0.13, [-10, 2]
+    meter_y_pos, meter_range = 0.13, [-3, 2]
     norm_val = (aff_val - meter_range[0]) / (meter_range[1] - meter_range[0])
     bar_fill = max(0, min(1, 1 - norm_val))
     # Full bar width
