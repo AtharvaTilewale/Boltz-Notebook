@@ -121,9 +121,7 @@ for step in steps:
 
 # ==== Move Notebook dist folder ====
 os.makedirs("/content/boltz_data", exist_ok=True)
-try:
-    shutil.move("/content/Boltz-Notebook/dist", "/content/boltz_data/")
-    shutil.rmtree("/content/Boltz-Notebook")
-except Exception as e:
-    print(f"[{Color.RED}✘{Color.RESET}] Failed to move Notebook dist folder: {e}")
+shutil.move("/content/Boltz-Notebook/dist", "/content/boltz_data/")
+shutil.rmtree("/content/Boltz-Notebook")
+
 
