@@ -57,9 +57,9 @@ def log_event(job_type=JOB_TYPE, job_name=JOB_NAME, event="visit"):
     except Exception as e:
         print(f"[{Color.RED}✘{Color.RESET}] Failed to log event: {e}")
 
-log_event(job_type="installation", job_name="Boltz Setup", event=" ")
+log_event(job_type="Installation", job_name="Boltz Setup", event=" ")
 # ==== Repos ====
-repo_dirs = ["boltz", "Boltz-Notebook"]
+repo_dirs = ["boltz"]
 
 # ==== Steps ====
 steps = [
@@ -68,13 +68,6 @@ steps = [
         "done":   f"[{Color.GREEN}✔{Color.RESET}] Boltz cloned successfully.",
         "fail":   f"[{Color.RED}✘{Color.RESET}] boltz clone failed.",
         "cmd": ["git", "clone", "https://github.com/jwohlwend/boltz.git"]
-    },
-    {
-        "loader": f"{Color.RESET}Installing dependencies...{Color.RESET}",
-        "done": f"[{Color.GREEN}✔{Color.RESET}] Dependencies installed successfully.",
-        "fail": f"[{Color.RED}✘{Color.RESET}] Dependency installation failed.",
-        "cmd": [sys.executable, "-m", "pip", "install", "-e", "boltz[cuda]", "biopython", "numpy", "matplotlib", "pyyaml", "py3Dmol",
-                "git+https://github.com/AtharvaTilewale/Boltz-Notebook.git", "--quiet"]
     },
     {
         "loader": f"{Color.CYAN}Validating installation...{Color.RESET}",
