@@ -46,7 +46,7 @@ def log_event(job_type=JOB_TYPE, job_name=JOB_NAME, event="visit"):
     data = {
         "timestamp": now_ist.strftime("%Y-%m-%d %H:%M:%S %Z"),
         "email": USER_EMAIL,
-        "username": USER_NAME,  # real Google name
+        "username": USER_NAME,
         "notebook": NOTEBOOK_NAME,
         "session_id": SESSION_ID,
         "job_type": job_type,
