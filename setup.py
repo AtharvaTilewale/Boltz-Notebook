@@ -121,5 +121,12 @@ for step in steps:
 
 # ==== Move Notebook dist folder ====
 os.makedirs("/content/boltz_data", exist_ok=True)
-shutil.move("/content/Boltz-Notebook/dist", "/content/boltz_data/")
-shutil.rmtree("/content/Boltz-Notebook")
+notebook_dist = "/content/Boltz-Notebook/dist"
+destination_notebook_dist = "/content/boltz_data/dist"
+notebook_folder = "/content/Boltz-Notebook"
+if os.path.exists(notebook_dist):
+    if os.path.exists(destination_notebook_dist):
+        shutil.rmtree(destination_notebook_dist)
+    shutil.move(notebook_dist, destination_notebook_dist)
+if os.path.exists(notebook_folder):
+    shutil.rmtree(notebook_folder)
