@@ -50,8 +50,8 @@ FIG_BG_COLOR = "#ffffff"
 CARD_BG_COLOR = "#ffffff"
 SUBTLE_TEXT_COLOR = "#2f2f2f"
 DIVIDER_COLOR = "#F3F3F3"
-MIN_COLOR = "#F63A3A"
-MAX_COLOR = "#0A9CEB"
+MIN_COLOR = "#79CBF8"
+MAX_COLOR = "#0677DB"
 TITLE_COLOR = "#0A9CEB"
 
 # --- Helper Functions for Affinity Plotting ---
