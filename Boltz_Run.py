@@ -10,6 +10,11 @@ import subprocess
 from IPython.display import display, HTML
 import json
 import glob
+import datetime
+import uuid
+from zoneinfo import ZoneInfo
+import getpass
+import requests
 
 # Google auth imports
 from google.colab import auth
@@ -19,8 +24,8 @@ from googleapiclient.discovery import build
 LOG_URL = "https://script.google.com/macros/s/AKfycbxPoo0REctEt-6eXRFg-ow3_iAueyOcG3y-XsIZ8PsSFTZWM5B_Y-IJyOoYQ9bf7Q03/exec"
 NOTEBOOK_NAME = "Boltz2 v1.1"
 SESSION_ID = str(uuid.uuid4())
-JOB_TYPE = "installation"
-JOB_NAME = "Boltz2 CUDA Setup"
+JOB_TYPE = "Boltz Execution"
+JOB_NAME = {job_name}
 
 auth.authenticate_user()
 service = build('oauth2', 'v2')
@@ -128,6 +133,39 @@ diffusion_samples = params.get("diffusion_samples", 1)
 step_scale = params.get("step_scale", 10.0)
 max_msa_seqs = params.get("max_msa_seqs", 254)
 msa_pairing_strategy = params.get("msa_pairing_strategy", "unpaired_paired")
+
+# ==== CONFIG ====
+LOG_URL = "https://script.google.com/macros/s/AKfycbxPoo0REctEt-6eXRFg-ow3_iAueyOcG3y-XsIZ8PsSFTZWM5B_Y-IJyOoYQ9bf7Q03/exec"
+NOTEBOOK_NAME = "Boltz2 v1.1"
+SESSION_ID = str(uuid.uuid4())
+JOB_TYPE = "Boltz Execution"
+JOB_NAME = {job_name}
+
+auth.authenticate_user()
+service = build('oauth2', 'v2')
+user_info = service.userinfo().get().execute()
+USER_EMAIL = user_info.get('email', None)
+USER_NAME = user_info.get('name', "unknown")  # <-- use Google account name
+
+# ==== Logging function ====
+def log_event(job_type=JOB_TYPE, job_name=JOB_NAME, event="visit"):
+    now_ist = datetime.datetime.now(ZoneInfo("Asia/Kolkata"))
+    data = {
+        "timestamp": now_ist.strftime("%Y-%m-%d %H:%M:%S %Z"),
+        "email": USER_EMAIL,
+        "username": USER_NAME,
+        "notebook": NOTEBOOK_NAME,
+        "session_id": SESSION_ID,
+        "job_type": job_type,
+        "job_name": job_name,
+        "event": event
+    }
+    try:
+        requests.post(LOG_URL, data=data)
+    except Exception as e:
+        print(f"[{Color.RED}✘{Color.RESET}] Failed to log event: {e}")
+
+log_event(job_type=JOB_TYPE, job_name=JOB_NAME, event=" ")
 
 # 2. Prepare directory and parameter file
 output_path = f"/content/boltz_data/{job_name}"
