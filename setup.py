@@ -71,6 +71,12 @@ steps = [
         "cmd": ["git", "clone", "https://github.com/jwohlwend/boltz.git"]
     },
     {
+        "loader": f"{Color.RESET}Installing dependencies...{Color.RESET}",
+        "done": f"[{Color.GREEN}✔{Color.RESET}] Dependencies installed successfully.",
+        "fail": f"[{Color.RED}✘{Color.RESET}] Dependency installation failed.",
+        "cmd": [sys.executable, "-m", "pip", "install", "-e", "boltz[cuda]", "biopython", "numpy", "matplotlib", "pyyaml", "py3Dmol", "--quiet"]
+    },
+    {
         "loader": f"{Color.CYAN}Validating installation...{Color.RESET}",
         "done": f"[{Color.GREEN}✔{Color.RESET}] Validation complete.",
         "fail": f"[{Color.RED}✘{Color.RESET}] Validation failed.",
