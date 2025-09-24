@@ -113,7 +113,7 @@ def create_analysis_card(ax: plt.Axes, title: str, prob: float, aff_val: float, 
 
     meter_y_pos, meter_range = 0.13, [-3, 2]
     norm_val = (aff_val - meter_range[0]) / (meter_range[1] - meter_range[0])
-    bar_fill = max(0, min(1, 1 - norm_val))
+    bar_fill = max(0, min(1, norm_val))
     # Full bar width
     bar_width = 0.4  
     bar_height = 0.012  
@@ -132,8 +132,8 @@ def create_analysis_card(ax: plt.Axes, title: str, prob: float, aff_val: float, 
                                 linewidth=0, facecolor=color,
                                 transform=ax.transAxes))
 
-    ax.text(0.28, meter_y_pos + 0.01, "Strong", ha="right", va="center", fontsize=12, color=SUBTLE_TEXT_COLOR, transform=ax.transAxes)
-    ax.text(0.72, meter_y_pos + 0.01, "Weak", ha="left", va="center", fontsize=12, color=SUBTLE_TEXT_COLOR, transform=ax.transAxes)
+    ax.text(0.28, meter_y_pos + 0.01, "Weak", ha="right", va="center", fontsize=12, color=SUBTLE_TEXT_COLOR, transform=ax.transAxes)
+    ax.text(0.72, meter_y_pos + 0.01, "Strong", ha="left", va="center", fontsize=12, color=SUBTLE_TEXT_COLOR, transform=ax.transAxes)
     ax.text(0.5, 0.06, get_affinity_assessment(aff_val), ha="center", va="center", fontsize=12, color=SUBTLE_TEXT_COLOR, style="italic", transform=ax.transAxes)
 
 
