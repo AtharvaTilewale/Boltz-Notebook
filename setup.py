@@ -126,6 +126,3 @@ try:
 except Exception as e:
     print(f"[{Color.RED}✘{Color.RESET}] Failed to move Notebook dist folder: {e}")
 
-# ==== Final log ====
-if all_success:
-    print(f"{Color.GREEN}All steps completed successfully.{Color.RESET}")
