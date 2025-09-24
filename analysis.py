@@ -13,6 +13,34 @@ import os
 import json
 from Bio.PDB import PDBParser
 
+def parse_value(value_str):
+    """Converts a string value from the params file to the appropriate Python type."""
+    value_str = value_str.strip()
+    if value_str.lower() == 'true': return True
+    if value_str.lower() == 'false': return False
+    if value_str.startswith('"') and value_str.endswith('"'): return value_str[1:-1]
+    try:
+        return float(value_str) if '.' in value_str else int(value_str)
+    except ValueError:
+        return value_str
+os.chdir("/content/boltz_data/")
+params_filepath = "/content/boltz_data/run_params.txt"
+params = {}
+with open(params_filepath, 'r') as f:
+    for line in f:
+        if '=' in line:
+            key, value_str = line.split('=', 1)
+            params[key.strip()] = parse_value(value_str)
+job_name = params.get("job_name")
+use_potentials = params.get("use_potentials", False)
+override = params.get("override", False)
+recycling_steps = params.get("recycling_steps", 3)
+sampling_steps = params.get("sampling_steps", 50)
+diffusion_samples = params.get("diffusion_samples", 1)
+step_scale = params.get("step_scale", 10.0)
+max_msa_seqs = params.get("max_msa_seqs", 254)
+msa_pairing_strategy = params.get("msa_pairing_strategy", "unpaired_paired")
+
 # ==============================================================================
 # SECTION 1: AFFINITY PLOTTING CODE (from affinity.py)
 # ==============================================================================
