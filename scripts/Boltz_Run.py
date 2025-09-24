@@ -16,6 +16,10 @@ from zoneinfo import ZoneInfo
 import getpass
 import requests
 
+# Google auth imports
+from google.colab import auth
+from googleapiclient.discovery import build
+
 # ANSI color codes for colored output
 class Color:
     CYAN = "\033[96m"
