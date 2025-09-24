@@ -123,5 +123,3 @@ for step in steps:
 os.makedirs("/content/boltz_data", exist_ok=True)
 shutil.move("/content/Boltz-Notebook/dist", "/content/boltz_data/")
 shutil.rmtree("/content/Boltz-Notebook")
-
-
