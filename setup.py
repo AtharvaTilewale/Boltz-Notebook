@@ -32,6 +32,7 @@ class Color:
     RED = "\033[91m"
     RESET = "\033[0m"
 
+print(f"{Color.CYAN} ===Initialising Setup=== {Color.RESET}")
 # ==== Google authentication and email retrieval ====
 auth.authenticate_user()
 service = build('oauth2', 'v2')
