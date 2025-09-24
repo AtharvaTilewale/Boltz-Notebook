@@ -328,20 +328,20 @@ html = r"""
   }
 
   async function saveRunParams() {
-      const getVal = id => document.getElementById(id).value;
-      const getChecked = id => document.getElementById(id).checked;
+        const getVal = id => document.getElementById(id).value;
+        const getChecked = id => document.getElementById(id).checked;
 
-      const content = `job_name = "${getVal('rp_job_name')}"
-use_potentials = ${getChecked('rp_use_potentials')}
-override = ${getChecked('rp_override')}
-recycling_steps = ${getVal('rp_recycling_steps')}
-sampling_steps = ${getVal('rp_sampling_steps')}
-diffusion_samples = ${getVal('rp_diffusion_samples')}
-step_scale = ${getVal('rp_step_scale')}
-max_msa_seqs = ${getVal('rp_max_msa_seqs')}
-subsample_msa = ${getChecked('rp_subsample_msa')}
-num_subsampled_msa = ${getVal('rp_num_subsampled_msa')}
-msa_pairing_strategy = "${getVal('rp_msa_pairing_strategy')}"`;
+        const content = `job_name = "${getVal('rp_job_name')}"
+        use_potentials = ${getChecked('rp_use_potentials')}
+        override = ${getChecked('rp_override')}
+        recycling_steps = ${getVal('rp_recycling_steps')}
+        sampling_steps = ${getVal('rp_sampling_steps')}
+        diffusion_samples = ${getVal('rp_diffusion_samples')}
+        step_scale = ${getVal('rp_step_scale')}
+        max_msa_seqs = ${getVal('rp_max_msa_seqs')}
+        subsample_msa = ${getChecked('rp_subsample_msa')}
+        num_subsampled_msa = ${getVal('rp_num_subsampled_msa')}
+        msa_pairing_strategy = "${getVal('rp_msa_pairing_strategy')}"`;
 
       const payload = { filename: 'run_params.txt', content: content.trim() };
       const runStatusEl = document.getElementById('run_status');

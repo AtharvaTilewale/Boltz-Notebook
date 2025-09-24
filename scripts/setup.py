@@ -19,7 +19,7 @@ from googleapiclient.discovery import build
 LOG_URL = "https://script.google.com/macros/s/AKfycbxPoo0REctEt-6eXRFg-ow3_iAueyOcG3y-XsIZ8PsSFTZWM5B_Y-IJyOoYQ9bf7Q03/exec"
 NOTEBOOK_NAME = "Boltz2 v1.1"
 SESSION_ID = str(uuid.uuid4())
-JOB_TYPE = "installation"
+JOB_TYPE = "Installation"
 JOB_NAME = "Boltz2 CUDA Setup"
 
 os.chdir("/content/")
