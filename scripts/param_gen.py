@@ -311,233 +311,268 @@ html = r"""
 </div>
 
 <script>
-  const container = document.getElementById('sequences_container');
+const container = document.getElementById('sequences_container');
 
-  function showRunParams() {
-      document.getElementById('main_params_container').style.display = 'none';
-      document.getElementById('run_params_container').style.display = 'block';
+// Allowed amino acids (canonical 20 only)
+// Allowed amino acids (canonical 20 only)
+const validAminoAcids = new Set(['A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y']);
+
+// Restrict protein sequence input to valid amino acids only
+function restrictProteinSequence(inputElement) {
+  const val = inputElement.value.toUpperCase();
+  const filtered = val.split('').filter(c => validAminoAcids.has(c)).join('');
+  if (val !== filtered) {
+    inputElement.value = filtered;
   }
-  function showMainParams() {
-      document.getElementById('run_params_container').style.display = 'none';
-      document.getElementById('main_params_container').style.display = 'block';
-      document.getElementById('run_status').innerHTML = '';
-  }
-  function toggleNumSubsampled(checkbox) {
-      const row = document.getElementById('num_subsampled_msa_row');
-      row.style.display = checkbox.checked ? 'flex' : 'none';
-  }
+}
 
-  async function saveRunParams() {
-        const getVal = id => document.getElementById(id).value;
-        const getChecked = id => document.getElementById(id).checked;
 
-        const content = `job_name = "${getVal('rp_job_name')}"
-        use_potentials = ${getChecked('rp_use_potentials')}
-        override = ${getChecked('rp_override')}
-        recycling_steps = ${getVal('rp_recycling_steps')}
-        sampling_steps = ${getVal('rp_sampling_steps')}
-        diffusion_samples = ${getVal('rp_diffusion_samples')}
-        step_scale = ${getVal('rp_step_scale')}
-        max_msa_seqs = ${getVal('rp_max_msa_seqs')}
-        subsample_msa = ${getChecked('rp_subsample_msa')}
-        num_subsampled_msa = ${getVal('rp_num_subsampled_msa')}
-        msa_pairing_strategy = "${getVal('rp_msa_pairing_strategy')}"`;
+// Format IDs input (removes spaces, converts to uppercase, adds commas)
+function formatIDs(inputElement) {
+  const originalValue = inputElement.value;
+  const formattedValue = originalValue.replace(/[\s,]+/g, '').split('').join(',');
+  inputElement.value = formattedValue.toUpperCase();
+}
 
-      const payload = { filename: 'run_params.txt', content: content.trim() };
-      const runStatusEl = document.getElementById('run_status');
+function showRunParams() {
+    document.getElementById('main_params_container').style.display = 'none';
+    document.getElementById('run_params_container').style.display = 'block';
+}
+function showMainParams() {
+    document.getElementById('run_params_container').style.display = 'none';
+    document.getElementById('main_params_container').style.display = 'block';
+    document.getElementById('run_status').innerHTML = '';
+}
+function toggleNumSubsampled(checkbox) {
+    const row = document.getElementById('num_subsampled_msa_row');
+    row.style.display = checkbox.checked ? 'flex' : 'none';
+}
 
-      try {
-          const result = await google.colab.kernel.invokeFunction('save_run_params', [payload], {});
-          if (result && result.status === 'ok') {
-              runStatusEl.innerHTML = `<div class="status-message success"><i class="fa-solid fa-check-circle"></i> Parameters saved successfully, you can run BoltzEngine now.</div>`;
-          } else {
-              runStatusEl.innerHTML = `<div class="status-message error"><i class="fa-solid fa-circle-xmark"></i> <strong>Error:</strong> ${result?.message || 'Unknown error.'}</div>`;
-          }
-      } catch (err) {
-          runStatusEl.innerHTML = `<div class="status-message error"><i class="fa-solid fa-circle-xmark"></i> <strong>Save failed:</strong> ${err.toString()}</div>`;
-      }
-  }
-
-  function formatIDs(inputElement) {
-    const originalValue = inputElement.value;
-    const formattedValue = originalValue.replace(/[\s,]+/g, '').split('').join(',');
-    inputElement.value = formattedValue.toUpperCase();
-  }
-
-  function addBlock(templateId) {
-      const tpl = document.getElementById(templateId);
-      const node = tpl.content.cloneNode(true);
-      container.appendChild(node);
-  }
-
-  function addProtein(first=false) { addBlock(first ? 'first_protein_template' : 'protein_template'); }
-
-  function addLigand() {
-      addBlock('ligand_template');
-      if (!document.getElementById('affinity-prediction-section')) {
-          const affinityContainer = document.getElementById('affinity_prediction_container');
-          affinityContainer.innerHTML = `
-            <div id="affinity-prediction-section" class="block" style="border-top-color: var(--secondary-color); margin-bottom: 0;">
-                <div class="row" style="align-items: center; margin-bottom: 12px;">
-                    <input type="checkbox" id="predict_affinity_toggle" onchange="toggleAffinityOptions(this)" style="width: auto; flex: 0; height: 16px; width: 16px; cursor: pointer;">
-                    <label for="predict_affinity_toggle" style="width: auto; cursor: pointer; color: var(--text-dark); font-weight: 500;">Predict Ligand Affinity</label>
-                </div>
-                <div id="ligand_chain_selector_container" style="display:none; margin-top: 10px;" class="row">
-                    <label for="ligand_chain_id_select">Ligand Chain:</label>
-                    <select id="ligand_chain_id_select"></select>
-                </div>
-            </div>`;
-      }
-  }
-
-  function toggleAffinityOptions(checkbox) {
-      const selectorContainer = document.getElementById('ligand_chain_selector_container');
-      if (checkbox.checked) {
-          selectorContainer.style.display = 'flex';
-          updateLigandChainSelector();
-      } else {
-          selectorContainer.style.display = 'none';
-      }
-  }
-
-  function updateLigandChainSelector() {
-      const selector = document.getElementById('ligand_chain_id_select');
-      if (!selector) return;
-      const currentVal = selector.value;
-      selector.innerHTML = '';
-      const allLigandIDs = new Set();
-      document.querySelectorAll('.seq-block[data-type="ligand"] .l-ids').forEach(input => {
-          (input.value || '').split(',').map(s => s.trim()).filter(Boolean).forEach(id => allLigandIDs.add(id));
-      });
-
-      if (allLigandIDs.size === 0) {
-          const option = document.createElement('option');
-          option.textContent = 'No ligand IDs defined';
-          option.value = '';
-          selector.appendChild(option);
-      } else {
-          allLigandIDs.forEach(id => {
-              const option = document.createElement('option');
-              option.value = id;
-              option.textContent = id;
-              selector.appendChild(option);
-          });
-      }
-      if (allLigandIDs.has(currentVal)) { selector.value = currentVal; }
-  }
-
-  function removeBlock(btn) {
-      btn.closest('.seq-block')?.remove();
-      if (document.querySelectorAll('.seq-block[data-type="ligand"]').length === 0) {
-          document.getElementById('affinity_prediction_container').innerHTML = '';
-      } else {
-          updateLigandChainSelector();
-      }
-  }
-
-  function clearAll() {
-      container.querySelectorAll('.seq-block:not(.first-protein)').forEach(el => el.remove());
-      const first = container.querySelector('.first-protein');
-      if (first) {
-          first.querySelectorAll('input, textarea').forEach(el => el.value = '');
-      }
-      document.getElementById('affinity_prediction_container').innerHTML = '';
-      document.getElementById('status').innerHTML = '';
-      document.getElementById('nextBtn').style.display = 'none';
-  }
-
-  function onLigandTypeChange(select) {
-      const valueInput = select.closest('.seq-block').querySelector('.l-value');
-      valueInput.placeholder = select.value === 'ccd' ? 'e.g., SAH' : 'e.g., CCO... (SMILES)';
-  }
-
-  function setStatus(message, type) {
-      const statusEl = document.getElementById('status');
-      const icon = { success: 'fa-check-circle', error: 'fa-circle-xmark', warning: 'fa-triangle-exclamation'}[type] || 'fa-circle-info';
-      statusEl.innerHTML = `<div class="status-message ${type}"><i class="fa-solid ${icon}"></i> ${message}</div>`;
-      document.getElementById('nextBtn').style.display = (type === 'success') ? 'inline-flex' : 'none';
-  }
-
-  async function saveYaml() {
-      const saveBtn = document.getElementById('saveBtn');
-      const saveIcon = document.getElementById('saveIcon');
-      const saveBtnText = document.getElementById('saveBtnText');
-      setStatus('Validating...', 'warning');
-      const sequences = [];
-      const blocks = document.querySelectorAll('.seq-block');
-      const allIDs = new Set();
-      let valid = true;
-
-      for (const [idx, b] of Array.from(blocks).entries()) {
-          const type = b.dataset.type;
-          let currentIds = [];
-
-          if (type === 'protein') {
-              currentIds = (b.querySelector('.p-ids').value || '').split(',').map(s => s.trim()).filter(Boolean);
-              const seq = b.querySelector('.p-seq').value.trim();
-              if (currentIds.length === 0 || !seq) {
-                  valid = false; setStatus(`<strong>Error:</strong> Protein block ${idx + 1} requires both IDs and a Sequence.`, 'error'); break;
-              } else {
-                  sequences.push({ protein: { id: currentIds, sequence: seq } });
-              }
-          } else if (type === 'ligand') {
-              currentIds = (b.querySelector('.l-ids').value || '').split(',').map(s => s.trim()).filter(Boolean);
-              const ltype = b.querySelector('.l-type').value;
-              const lvalue = b.querySelector('.l-value').value.trim();
-              if (currentIds.length === 0 || !lvalue) {
-                  valid = false; setStatus(`<strong>Error:</strong> Ligand block ${idx + 1} requires both IDs and a Value.`, 'error'); break;
-              } else {
-                  const entry = { id: currentIds };
-                  if (ltype === 'ccd') entry.ccd = lvalue; else entry.smiles = lvalue;
-                  sequences.push({ ligand: entry });
-              }
-          }
-          for (const id of currentIds) {
-              if (allIDs.has(id)) {
-                  valid = false; setStatus(`<strong>Error:</strong> Duplicate ID '<strong>${id}</strong>' found in block ${idx + 1}. IDs must be unique.`, 'error'); break;
-              }
-              allIDs.add(id);
-          }
-          if (!valid) break;
-      }
-      if (!valid) return;
-
-      const payload = { sequences: sequences };
-      const predictAffinityCheckbox = document.getElementById('predict_affinity_toggle');
-      if (predictAffinityCheckbox && predictAffinityCheckbox.checked) {
-          const selectedLigandId = document.getElementById('ligand_chain_id_select').value;
-          if (selectedLigandId) {
-              payload.properties = [{ affinity: { binder: selectedLigandId } }];
-          } else {
-              setStatus('<strong>Error:</strong> "Predict Ligand Affinity" is checked, but no ligand chain is selected or defined.', 'error'); return;
-          }
+async function saveRunParams() {
+      const getVal = id => document.getElementById(id).value;
+      const getChecked = id => document.getElementById(id).checked;
+      const jobName = getVal('rp_job_name').trim();
+      if (!jobName) {
+          document.getElementById('run_status').innerHTML = 
+              `<div class="status-message error"><i class="fa-solid fa-circle-xmark"></i> <strong>Error:</strong> Job Name is required. Cannot save.</div>`;
+          return;  // Stop execution if job name is empty
       }
 
-      saveBtn.disabled = true;
-      saveBtnText.innerText = 'Saving...';
-      saveIcon.className = 'fa-solid fa-spinner fa-spin';
-      try {
-          const result = await google.colab.kernel.invokeFunction('save_params', [payload], {});
-          if (result && result.status === 'ok') {
-              setStatus(`Parameter File Saved Successfully`, 'success');
-          } else {
-              setStatus(`<strong>Error:</strong> ${result?.message || 'Unknown error occurred.'}`, 'error');
-          }
-      } catch (err) {
-          setStatus(`<strong>Save failed:</strong> ${err.toString()}`, 'error');
-      } finally {
-          saveBtn.disabled = false;
-          saveBtnText.innerText = 'Save YAML';
-          saveIcon.className = 'fa-solid fa-save';
-      }
-  }
+      const content = `job_name = "${jobName}"
+      use_potentials = ${getChecked('rp_use_potentials')}
+      override = ${getChecked('rp_override')}
+      recycling_steps = ${getVal('rp_recycling_steps')}
+      sampling_steps = ${getVal('rp_sampling_steps')}
+      diffusion_samples = ${getVal('rp_diffusion_samples')}
+      step_scale = ${getVal('rp_step_scale')}
+      max_msa_seqs = ${getVal('rp_max_msa_seqs')}
+      subsample_msa = ${getChecked('rp_subsample_msa')}
+      num_subsampled_msa = ${getVal('rp_num_subsampled_msa')}
+      msa_pairing_strategy = "${getVal('rp_msa_pairing_strategy')}"`;
 
-  document.getElementById("rp_job_name").addEventListener("input", function() {
-    this.value = this.value.replace(/\s+/g, "_");
+    const payload = { filename: 'run_params.txt', content: content.trim() };
+    const runStatusEl = document.getElementById('run_status');
+
+    try {
+        const result = await google.colab.kernel.invokeFunction('save_run_params', [payload], {});
+        if (result && result.status === 'ok') {
+            runStatusEl.innerHTML = `<div class="status-message success"><i class="fa-solid fa-check-circle"></i> Parameters saved successfully, you can run BoltzEngine now.</div>`;
+        } else {
+            runStatusEl.innerHTML = `<div class="status-message error"><i class="fa-solid fa-circle-xmark"></i> <strong>Error:</strong> ${result?.message || 'Unknown error.'}</div>`;
+        }
+    } catch (err) {
+        runStatusEl.innerHTML = `<div class="status-message error"><i class="fa-solid fa-circle-xmark"></i> <strong>Save failed:</strong> ${err.toString()}</div>`;
+    }
+}
+
+function addBlock(templateId) {
+    const tpl = document.getElementById(templateId);
+    const node = tpl.content.cloneNode(true);
+    container.appendChild(node);
+
+    // Attach sequence restriction to protein sequence textareas
+    node.querySelectorAll('.p-seq').forEach(el => {
+        el.addEventListener('input', () => restrictProteinSequence(el));
+    });
+}
+
+function addProtein(first=false) { addBlock(first ? 'first_protein_template' : 'protein_template'); 
+// Attach restriction for already existing protein sequence inputs
+document.querySelectorAll('.p-seq').forEach(el => {
+  el.addEventListener('input', () => restrictProteinSequence(el));
+});
+}
+
+function addLigand() {
+    addBlock('ligand_template');
+    if (!document.getElementById('affinity-prediction-section')) {
+        const affinityContainer = document.getElementById('affinity_prediction_container');
+        affinityContainer.innerHTML = `
+          <div id="affinity-prediction-section" class="block" style="border-top-color: var(--secondary-color); margin-bottom: 0;">
+              <div class="row" style="align-items: center; margin-bottom: 12px;">
+                  <input type="checkbox" id="predict_affinity_toggle" onchange="toggleAffinityOptions(this)" style="width: auto; flex: 0; height: 16px; width: 16px; cursor: pointer;">
+                  <label for="predict_affinity_toggle" style="width: auto; cursor: pointer; color: var(--text-dark); font-weight: 500;">Predict Ligand Affinity</label>
+              </div>
+              <div id="ligand_chain_selector_container" style="display:none; margin-top: 10px;" class="row">
+                  <label for="ligand_chain_id_select">Ligand Chain:</label>
+                  <select id="ligand_chain_id_select"></select>
+              </div>
+          </div>`;
+    }
+}
+
+function toggleAffinityOptions(checkbox) {
+    const selectorContainer = document.getElementById('ligand_chain_selector_container');
+    if (checkbox.checked) {
+        selectorContainer.style.display = 'flex';
+        updateLigandChainSelector();
+    } else {
+        selectorContainer.style.display = 'none';
+    }
+}
+
+function updateLigandChainSelector() {
+    const selector = document.getElementById('ligand_chain_id_select');
+    if (!selector) return;
+    const currentVal = selector.value;
+    selector.innerHTML = '';
+    const allLigandIDs = new Set();
+    document.querySelectorAll('.seq-block[data-type="ligand"] .l-ids').forEach(input => {
+        (input.value || '').split(',').map(s => s.trim()).filter(Boolean).forEach(id => allLigandIDs.add(id));
+    });
+
+    if (allLigandIDs.size === 0) {
+        const option = document.createElement('option');
+        option.textContent = 'No ligand IDs defined';
+        option.value = '';
+        selector.appendChild(option);
+    } else {
+        allLigandIDs.forEach(id => {
+            const option = document.createElement('option');
+            option.value = id;
+            option.textContent = id;
+            selector.appendChild(option);
+        });
+    }
+    if (allLigandIDs.has(currentVal)) { selector.value = currentVal; }
+}
+
+function removeBlock(btn) {
+    btn.closest('.seq-block')?.remove();
+    if (document.querySelectorAll('.seq-block[data-type="ligand"]').length === 0) {
+        document.getElementById('affinity_prediction_container').innerHTML = '';
+    } else {
+        updateLigandChainSelector();
+    }
+}
+
+function clearAll() {
+    container.querySelectorAll('.seq-block:not(.first-protein)').forEach(el => el.remove());
+    const first = container.querySelector('.first-protein');
+    if (first) {
+        first.querySelectorAll('input, textarea').forEach(el => el.value = '');
+    }
+    document.getElementById('affinity_prediction_container').innerHTML = '';
+    document.getElementById('status').innerHTML = '';
+    document.getElementById('nextBtn').style.display = 'none';
+}
+
+function onLigandTypeChange(select) {
+    const valueInput = select.closest('.seq-block').querySelector('.l-value');
+    valueInput.placeholder = select.value === 'ccd' ? 'e.g., SAH' : 'e.g., CCO... (SMILES)';
+}
+
+function setStatus(message, type) {
+    const statusEl = document.getElementById('status');
+    const icon = { success: 'fa-check-circle', error: 'fa-circle-xmark', warning: 'fa-triangle-exclamation'}[type] || 'fa-circle-info';
+    statusEl.innerHTML = `<div class="status-message ${type}"><i class="fa-solid ${icon}"></i> ${message}</div>`;
+    document.getElementById('nextBtn').style.display = (type === 'success') ? 'inline-flex' : 'none';
+}
+
+async function saveYaml() {
+    const saveBtn = document.getElementById('saveBtn');
+    const saveIcon = document.getElementById('saveIcon');
+    const saveBtnText = document.getElementById('saveBtnText');
+    setStatus('Validating...', 'warning');
+    const sequences = [];
+    const blocks = document.querySelectorAll('.seq-block');
+    const allIDs = new Set();
+    let valid = true;
+
+    for (const [idx, b] of Array.from(blocks).entries()) {
+        const type = b.dataset.type;
+        let currentIds = [];
+
+        if (type === 'protein') {
+            currentIds = (b.querySelector('.p-ids').value || '').split(',').map(s => s.trim()).filter(Boolean);
+            const seq = b.querySelector('.p-seq').value.trim();
+            if (currentIds.length === 0 || !seq) {
+                valid = false; setStatus(`<strong>Error:</strong> Protein block ${idx + 1} requires both IDs and a Sequence.`, 'error'); break;
+            } else {
+                sequences.push({ protein: { id: currentIds, sequence: seq } });
+            }
+        } else if (type === 'ligand') {
+            currentIds = (b.querySelector('.l-ids').value || '').split(',').map(s => s.trim()).filter(Boolean);
+            const ltype = b.querySelector('.l-type').value;
+            const lvalue = b.querySelector('.l-value').value.trim();
+            if (currentIds.length === 0 || !lvalue) {
+                valid = false; setStatus(`<strong>Error:</strong> Ligand block ${idx + 1} requires both IDs and a Value.`, 'error'); break;
+            } else {
+                const entry = { id: currentIds };
+                if (ltype === 'ccd') entry.ccd = lvalue; else entry.smiles = lvalue;
+                sequences.push({ ligand: entry });
+            }
+        }
+        for (const id of currentIds) {
+            if (allIDs.has(id)) {
+                valid = false; setStatus(`<strong>Error:</strong> Duplicate ID '<strong>${id}</strong>' found in block ${idx + 1}. IDs must be unique.`, 'error'); break;
+            }
+            allIDs.add(id);
+        }
+        if (!valid) break;
+    }
+    if (!valid) return;
+
+    const payload = { sequences: sequences };
+    const predictAffinityCheckbox = document.getElementById('predict_affinity_toggle');
+    if (predictAffinityCheckbox && predictAffinityCheckbox.checked) {
+        const selectedLigandId = document.getElementById('ligand_chain_id_select').value;
+        if (selectedLigandId) {
+            payload.properties = [{ affinity: { binder: selectedLigandId } }];
+        } else {
+            setStatus('<strong>Error:</strong> "Predict Ligand Affinity" is checked, but no ligand chain is selected or defined.', 'error'); return;
+        }
+    }
+
+    saveBtn.disabled = true;
+    saveBtnText.innerText = 'Saving...';
+    saveIcon.className = 'fa-solid fa-spinner fa-spin';
+    try {
+        const result = await google.colab.kernel.invokeFunction('save_params', [payload], {});
+        if (result && result.status === 'ok') {
+            setStatus(`Parameter File Saved Successfully`, 'success');
+        } else {
+            setStatus(`<strong>Error:</strong> ${result?.message || 'Unknown error occurred.'}`, 'error');
+        }
+    } catch (err) {
+        setStatus(`<strong>Save failed:</strong> ${err.toString()}`, 'error');
+    } finally {
+        saveBtn.disabled = false;
+        saveBtnText.innerText = 'Save YAML';
+        saveIcon.className = 'fa-solid fa-save';
+    }
+}
+
+// Replace spaces in job name with underscores
+document.getElementById("rp_job_name").addEventListener("input", function() {
+  this.value = this.value.replace(/\s+/g, "_");
 });
 
-  addProtein(true); // Initialize UI
+// Initialize UI
+addProtein(true);
 </script>
+
+
 """
 
 display(HTML(html))
