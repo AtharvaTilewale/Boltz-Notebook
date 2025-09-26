@@ -21,46 +21,46 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Gemini API Call ---
-    async function callGemini(prompt, retries = 3, delay = 1000) {
-        const payload = {
-            contents: [{
-                parts: [{
-                    text: prompt
-                }]
-            }]
-        };
-        try {
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const result = await response.json();
-            return result.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response.";
-        } catch (error) {
-            if (retries > 0) {
-                await new Promise(res => setTimeout(res, delay));
-                return callGemini(prompt, retries - 1, delay * 2);
-            }
-            console.error("Error calling Gemini API:", error);
-            return "An error occurred while fetching the explanation.";
-        }
-    }
+    // async function callGemini(prompt, retries = 3, delay = 1000) {
+    //     const payload = {
+    //         contents: [{
+    //             parts: [{
+    //                 text: prompt
+    //             }]
+    //         }]
+    //     };
+    //     try {
+    //         const response = await fetch(apiUrl, {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json'
+    //             },
+    //             body: JSON.stringify(payload)
+    //         });
+    //         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    //         const result = await response.json();
+    //         return result.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response.";
+    //     } catch (error) {
+    //         if (retries > 0) {
+    //             await new Promise(res => setTimeout(res, delay));
+    //             return callGemini(prompt, retries - 1, delay * 2);
+    //         }
+    //         console.error("Error calling Gemini API:", error);
+    //         return "An error occurred while fetching the explanation.";
+    //     }
+    // }
 
-    // --- Event Listeners for Gemini Buttons ---
-    document.querySelectorAll('.gemini-btn').forEach(button => {
-        button.addEventListener('click', async () => {
-            const topic = button.dataset.topic;
-            const analogy = button.dataset.analogy;
-            const prompt = `You are a helpful science communicator. Explain the concept of "${topic}" in bioinformatics using a simple, clear analogy. The analogy should be similar in spirit to this example: "${analogy}". Keep your explanation concise and easy for a non-expert to understand.`;
-            showModal(`Explaining: ${topic}`);
-            const explanation = await callGemini(prompt);
-            modalBody.innerHTML = `<p>${explanation.replace(/\n/g, '<br>')}</p>`;
-        });
-    });
+    // // --- Event Listeners for Gemini Buttons ---
+    // document.querySelectorAll('.gemini-btn').forEach(button => {
+    //     button.addEventListener('click', async () => {
+    //         const topic = button.dataset.topic;
+    //         const analogy = button.dataset.analogy;
+    //         const prompt = `You are a helpful science communicator. Explain the concept of "${topic}" in bioinformatics using a simple, clear analogy. The analogy should be similar in spirit to this example: "${analogy}". Keep your explanation concise and easy for a non-expert to understand.`;
+    //         showModal(`Explaining: ${topic}`);
+    //         const explanation = await callGemini(prompt);
+    //         modalBody.innerHTML = `<p>${explanation.replace(/\n/g, '<br>')}</p>`;
+    //     });
+    // });
 
     // --- Tab navigation for Demo ---
     const tabButtons = document.querySelectorAll('.tab-btn');
