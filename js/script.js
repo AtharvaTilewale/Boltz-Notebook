@@ -97,6 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         colorscheme: 'chain'
                     }
                 });
+                viewerInstance.addStyle({hetflag: true}, {stick: {colorscheme: 'default'}});
                 viewerInstance.zoomTo();
                 viewerInstance.render();
             })
@@ -107,118 +108,118 @@ document.addEventListener('DOMContentLoaded', () => {
     init3DViewer(); // Initialize on load
 
     // --- Chart.js Instances ---
-    const createChart = (canvasId, type, data, options) => {
-        const ctx = document.getElementById(canvasId).getContext('2d');
-        new Chart(ctx, {
-            type,
-            data,
-            options
+    // Fetch and plot real pLDDT data
+    fetch('assets/pred_data/plddt.json')
+        .then(response => response.json())
+        .then(plddtDataArr => {
+            const plddtData = {
+                labels: plddtDataArr.map((_, i) => i + 1),
+                datasets: [{
+                    label: 'pLDDT Score',
+                    data: plddtDataArr,
+                    borderColor: '#0ea5e9',
+                    backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                    fill: true,
+                    pointRadius: 0,
+                    tension: 0.4,
+                    borderWidth: 2
+                }]
+            };
+            const plddtOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Confidence (0-100)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Residue Index'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: (ctx) => `Residue ${ctx.label}: ${ctx.parsed.y.toFixed(1)} pLDDT`
+                        }
+                    }
+                }
+            };
+            createChart('plddtChartDemo', 'line', plddtData, plddtOptions);
+        })
+        .catch(err => {
+            console.error('Failed to load pLDDT data:', err);
         });
-    };
 
-    const plddtData = {
-        labels: Array.from({ length: 150 }, (_, i) => i + 1),
-        datasets: [{
-            label: 'pLDDT Score',
-            data: Array.from({ length: 150 }, (_, i) => (i > 30 && i < 120) ? 85 + Math.sin(i / 10) * 8 + Math.random() * 5 : 40 + Math.random() * 20),
-            borderColor: '#0ea5e9',
-            backgroundColor: 'rgba(14, 165, 233, 0.1)',
-            fill: true,
-            pointRadius: 0,
-            tension: 0.4,
-            borderWidth: 2
-        }]
-    };
-    const plddtOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            y: {
-                beginAtZero: true,
-                max: 100,
-                title: {
-                    display: true,
-                    text: 'Confidence (0-100)'
-                }
-            },
-            x: {
-                title: {
-                    display: true,
-                    text: 'Residue Index'
+    // Fetch and plot real PAE data
+    fetch('assets/pred_data/pae.json')
+        .then(response => response.json())
+        .then(paeMatrix => {
+            // Assume paeMatrix is a 2D array: paeMatrix[i][j] = error between residue i and j
+            const size = paeMatrix.length;
+            const paePoints = [];
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    paePoints.push({
+                        x: i,
+                        y: j,
+                        v: paeMatrix[i][j]
+                    });
                 }
             }
-        },
-        plugins: {
-            legend: {
-                display: false
-            },
-            tooltip: {
-                mode: 'index',
-                intersect: false,
-                callbacks: {
-                    label: (ctx) => `Residue ${ctx.label}: ${ctx.parsed.y.toFixed(1)} pLDDT`
+            const paeData = {
+                datasets: [{
+                    label: 'PAE (Å)',
+                    data: paePoints.map(p => ({
+                        x: p.x,
+                        y: p.y,
+                        r: 5
+                    })),
+                    backgroundColor: paePoints.map(p => `rgba(15, 118, 110, ${Math.max(0.1, 1 - (p.v / 25))})`)
+                }]
+            };
+            const paeOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grace: '5%',
+                        title: { display: true, text: 'Residue Index' }
+                    },
+                    x: {
+                        beginAtZero: true,
+                        grace: '5%',
+                        title: { display: true, text: 'Residue Index' }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => {
+                                const p = paePoints[ctx.dataIndex];
+                                return `Error between residue ${p.x} & ${p.y}: ${p.v.toFixed(1)} Å`;
+                            }
+                        }
+                    }
                 }
-            }
-        }
-    };
-    createChart('plddtChartDemo', 'line', plddtData, plddtOptions);
-
-    const paePoints = [];
-    const size = 20;
-    for (let i = 0; i < size; i++) {
-        for (let j = 0; j < size; j++) {
-            const error = Math.abs(i - j) < 3 ? Math.random() * 2 : 2 + (Math.sqrt(Math.pow(i - size / 2, 2) + Math.pow(j - size / 2, 2)) / size) * 20 + Math.random() * 5;
-            paePoints.push({
-                x: i,
-                y: j,
-                v: error
-            });
-        }
-    }
-    const paeData = {
-        datasets: [{
-            label: 'PAE (Å)',
-            data: paePoints.map(p => ({
-                x: p.x,
-                y: p.y,
-                r: 5
-            })),
-            backgroundColor: paePoints.map(p => `rgba(15, 118, 110, ${Math.max(0.1, 1 - (p.v / 25))})`)
-        }]
-    };
-    const paeOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            y: {
-                beginAtZero: true,
-                grace: '5%',
-                title: {
-                    display: true,
-                    text: 'Residue Index'
-                }
-            },
-            x: {
-                beginAtZero: true,
-                grace: '5%',
-                title: {
-                    display: true,
-                    text: 'Residue Index'
-                }
-            }
-        },
-        plugins: {
-            legend: {
-                display: false
-            },
-            tooltip: {
-                callbacks: {
-                    label: (ctx) => `Error between residue ${paePoints[ctx.dataIndex].x} & ${paePoints[ctx.dataIndex].y}: ${paePoints[ctx.dataIndex].v.toFixed(1)} Å`
-                }
-            }
-        }
-    };
-    createChart('paeChartDemo', 'bubble', paeData, paeOptions);
+            };
+            createChart('paeChartDemo', 'bubble', paeData, paeOptions);
+        })
+        .catch(err => {
+            console.error('Failed to load PAE data:', err);
+        });
 
     // --- Citation copy ---
     window.copyToClipboard = (elementId) => {
