@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boltz2-Notebook | Protein Structure Prediction</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://3dmol.org/build/3Dmol-min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Chosen Palette: Cool Gray, Indigo, and Sky Blue -->
+    <!-- Application Structure Plan: This is a single-page project website designed for a GitHub repository. The structure follows a logical narrative flow: (1) Hero section to grab attention and provide key links (Colab, GitHub). (2) Features section to quickly communicate value. (3) An interactive Workflow guide to explain the 'how'. (4) A Live Demo to show the 'what' (the results). (5) Citation and About sections for academic context and credibility. This top-down structure is intuitive for users evaluating a new software tool. A sticky navigation bar allows non-linear access to any section, catering to both new and returning users. -->
+    <!-- Visualization & Content Choices: Key information is broken into visually distinct sections. Features are presented in a card layout with icons for scannability. The existing workflow guide is integrated seamlessly as a full section. A new 'Live Demo' section uses a tabbed interface to showcase the different outputs (3D View, Plots, Affinity) without overwhelming the user. The 3D view is powered by 3Dmol.js with a sample PDB, and confidence plots are representative examples using Chart.js. The affinity plot is an HTML/CSS recreation of the visual style from the notebook. All visualizations and interactions adhere to the NO SVG/Mermaid constraint. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            background-color: #f1f5f9;
+            color: #1e293b;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        .hero-bg {
+            background-color: #0c0a09;
+            background-image: radial-gradient(#1e293b 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .phase-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            display: flex;
+            flex-direction: column;
+        }
+        .phase-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .phase-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: white;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        .gemini-btn {
+            margin-top: auto;
+            padding-top: 0.75rem;
+            border-top: 1px solid #f1f5f9;
+            background: none;
+            border-bottom: none;
+            border-left: none;
+            border-right: none;
+            text-align: left;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #0ea5e9;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .gemini-btn:hover {
+            color: #0284c7;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            transform: scale(0.95);
+            transition: transform 0.3s;
+        }
+        .modal-overlay.visible .modal-content {
+            transform: scale(1);
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 2rem auto;
+        }
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        .tab-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .tab-btn.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="text-slate-700">
+    <header id="home" class="bg-slate-900/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-xl font-bold text-white">
+                            <i class="fa-solid fa-microchip text-indigo-400"></i> Boltz2-Notebook
+                        </h1>
+                    </div>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#features" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Features</a>
+                        <a href="#workflow" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Workflow</a>
+                        <a href="#demo" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Demo</a>
+                        <a href="#citation" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Cite</a>
+                        <a href="#about" class="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">About</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="relative hero-bg text-white py-20 sm:py-28 lg:py-32">
+            <div class="absolute inset-0 bg-slate-900/60"></div>
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
+                <h2 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight">
+                    Democratizing Protein Structure Prediction
+                </h2>
+                <p class="mt-6 max-w-2xl mx-auto text-lg text-slate-300">
+                    An open-source, zero-setup Google Colab notebook for running the advanced Boltz2 model. Predict protein structures, complexes, and ligand affinities with an interactive UI and automated analysis.
+                </p>
+                <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <a href="https://colab.research.google.com/github/AtharvaTilewale/Boltz-Notebook/blob/main/Boltz2_plus.ipynb" target="_blank" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
+                        <i class="fa-solid fa-rocket"></i> Run on Google Colab
+                    </a>
+                    <a href="https://github.com/AtharvaTilewale/Boltz-Notebook" target="_blank" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 bg-slate-700 text-white font-semibold rounded-lg hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition">
+                        <i class="fa-brands fa-github"></i> View on GitHub
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="py-16 sm:py-24 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight">Powerful Features, Simplified</h3>
+                    <p class="mt-4 max-w-2xl mx-auto text-lg text-slate-500">Everything you need for advanced protein modeling, packed into one accessible notebook.</p>
+                </div>
+                <div class="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                    <div class="p-6 rounded-lg">
+                        <i class="fa-solid fa-cloud text-3xl text-indigo-500"></i>
+                        <h4 class="mt-4 text-lg font-semibold text-slate-900">Zero-Setup Colab Environment</h4>
+                        <p class="mt-2 text-sm text-slate-500">Run directly in your browser with free GPU access. All dependencies are installed automatically.</p>
+                    </div>
+                    <div class="p-6 rounded-lg">
+                        <i class="fa-solid fa-sliders text-3xl text-indigo-500"></i>
+                        <h4 class="mt-4 text-lg font-semibold text-slate-900">Interactive UI for Parameters</h4>
+                        <p class="mt-2 text-sm text-slate-500">No more manual config files. Use a simple form to input sequences, ligands, and run settings.</p>
+                    </div>
+                    <div class="p-6 rounded-lg">
+                        <i class="fa-solid fa-puzzle-piece text-3xl text-indigo-500"></i>
+                        <h4 class="mt-4 text-lg font-semibold text-slate-900">Ligand & Affinity Support</h4>
+                        <p class="mt-2 text-sm text-slate-500">Predict structures with small molecule ligands (CCD/SMILES) and get binding affinity estimates.</p>
+                    </div>
+                    <div class="p-6 rounded-lg">
+                        <i class="fa-solid fa-chart-pie text-3xl text-indigo-500"></i>
+                        <h4 class="mt-4 text-lg font-semibold text-slate-900">Automated Analysis & Reports</h4>
+                        <p class="mt-2 text-sm text-slate-500">Automatically generates confidence plots (pLDDT, PAE) and a 3D viewer in a clean report.</p>
+                    </div>
+                    <div class="p-6 rounded-lg">
+                        <i class="fa-solid fa-gears text-3xl text-indigo-500"></i>
+                        <h4 class="mt-4 text-lg font-semibold text-slate-900">Advanced User Controls</h4>
+                        <p class="mt-2 text-sm text-slate-500">Customize MSA options, recycling steps, and diffusion parameters for fine-tuned predictions.</p>
+                    </div>
+                    <div class="p-6 rounded-lg">
+                        <i class="fa-solid fa-lightbulb text-3xl text-indigo-500"></i>
+                        <h4 class="mt-4 text-lg font-semibold text-slate-900">Gemini-Powered Insights</h4>
+                        <p class="mt-2 text-sm text-slate-500">Get AI-powered explanations of complex topics and suggestions for next steps in your research.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Workflow Section -->
+        <section id="workflow" class="py-16 sm:py-24">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">The Boltz2-Notebook Pipeline</h2>
+                    <p class="mt-4 max-w-2xl mx-auto text-lg text-slate-500">Explore the end-to-end process of predicting protein structures, from initial setup to final results, in four distinct phases.</p>
+                </div>
+
+                <!-- Phase 1 -->
+                <div id="phase1" class="mb-16">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-12 h-12 flex-shrink-0 rounded-full bg-sky-600 text-white flex items-center justify-center text-xl font-bold">1</div>
+                        <h3 class="text-2xl font-bold text-slate-800">Setup & Configuration</h3>
+                    </div>
+                    <p class="mb-8 text-slate-600 max-w-3xl">This initial phase prepares the software environment and defines the inputs for the prediction task through a user-friendly interface.</p>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div class="phase-card p-6">
+                            <div>
+                                <div class="flex items-center gap-4">
+                                    <div class="phase-icon bg-sky-500"><i class="fa-solid fa-server"></i></div>
+                                    <h4 class="text-lg font-semibold text-slate-900">Environment Setup</h4>
+                                </div>
+                                <p class="mt-4 text-slate-500 text-sm">Installs all CUDA-enabled dependencies and validates the GPU.</p>
+                            </div>
+                            <button class="gemini-btn" data-topic="CUDA-enabled dependencies in bioinformatics" data-analogy="Think of a GPU as a super-fast graphics card. CUDA is like a special language that lets scientific programs use that graphics card for heavy calculations, not just for games. It's like turning a race car's engine into a supercomputer for science.">✨ Explain This</button>
+                        </div>
+                        <div class="phase-card p-6">
+                            <div>
+                                <div class="flex items-center gap-4">
+                                    <div class="phase-icon bg-sky-500"><i class="fa-solid fa-keyboard"></i></div>
+                                    <h4 class="text-lg font-semibold text-slate-900">Input Configuration</h4>
+                                </div>
+                                <p class="mt-4 text-slate-500 text-sm">Define protein sequences, ligands, and run parameters via an interactive UI.</p>
+                            </div>
+                            <button class="gemini-btn" data-topic="SMILES strings for ligands" data-analogy="Imagine a SMILES string is a simple text message that describes a molecule's structure. Instead of drawing complex diagrams, it uses letters and symbols to spell out how atoms are connected, like a secret code for chemists.">✨ Explain This</button>
+                        </div>
+                        <div class="phase-card p-6">
+                            <div>
+                                <div class="flex items-center gap-4">
+                                    <div class="phase-icon bg-sky-500"><i class="fa-solid fa-file-code"></i></div>
+                                    <h4 class="text-lg font-semibold text-slate-900">YAML Generation</h4>
+                                </div>
+                                <p class="mt-4 text-slate-500 text-sm">Automatically formats user input into a machine-readable `params.yaml` file.</p>
+                            </div>
+                            <button class="gemini-btn" data-topic="YAML configuration files" data-analogy="A YAML file is like a highly organized grocery list for a computer program. It uses simple indentation to list all the 'ingredients' (parameters) and 'recipes' (settings) the program needs to run correctly, making it very easy for both humans and computers to read.">✨ Explain This</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 2 -->
+                <div id="phase2" class="mb-16">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-12 h-12 flex-shrink-0 rounded-full bg-amber-600 text-white flex items-center justify-center text-xl font-bold">2</div>
+                        <h3 class="text-2xl font-bold text-slate-800">Core Prediction Engine</h3>
+                    </div>
+                    <p class="mb-8 text-slate-600 max-w-3xl">This is the automated, computational core of the pipeline. Boltz2 takes the configuration file and begins the intensive process of searching for evolutionary data and then running the deep learning model to predict the 3D structure.</p>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="phase-card p-6">
+                            <div>
+                                <div class="flex items-center gap-4">
+                                    <div class="phase-icon bg-amber-500"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+                                    <h4 class="text-lg font-semibold text-slate-900">MSA Search</h4>
+                                </div>
+                                <p class="mt-4 text-slate-500 text-sm">Boltz2 connects to online bioinformatics servers to automatically fetch Multiple Sequence Alignments (MSAs), gathering crucial evolutionary context for the model.</p>
+                            </div>
+                        </div>
+                        <div class="phase-card p-6">
+                            <div>
+                                <div class="flex items-center gap-4">
+                                    <div class="phase-icon bg-amber-500"><i class="fa-solid fa-brain"></i></div>
+                                    <h4 class="text-lg font-semibold text-slate-900">Structure Prediction</h4>
+                                </div>
+                                <p class="mt-4 text-slate-500 text-sm">The deep learning model uses the MSA and a diffusion process to generate 3D coordinates. It iteratively refines the structure through recycling steps for higher accuracy.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 3 -->
+                <div id="phase3" class="mb-16">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-12 h-12 flex-shrink-0 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xl font-bold">3</div>
+                        <h3 class="text-2xl font-bold text-slate-800">Analysis & Visualization</h3>
+                    </div>
+                    <p class="mb-8 text-slate-600 max-w-3xl">Once the prediction is complete, the pipeline generates a rich set of outputs. The notebook then automates the analysis of these results, creating plots and an interactive 3D view to help the user assess the quality and characteristics of the predicted structure.</p>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div class="phase-card p-6">
+                            <div>
+                                <div class="flex items-center gap-4">
+                                    <div class="phase-icon bg-emerald-500"><i class="fa-solid fa-box-archive"></i></div>
+                                    <h4 class="text-lg font-semibold text-slate-900">Output Generation</h4>
+                                </div>
+                                <p class="mt-4 text-slate-500 text-sm">Generates 3D models (PDB), confidence scores (pLDDT), error matrices (PAE), and ligand affinity predictions (`affinity.json`).</p>
+                            </div>
+                        </div>
+                        <div class="phase-card p-6">
+                            <div>
+                                <div class="flex items-center gap-4">
+                                    <div class="phase-icon bg-emerald-500"><i class="fa-solid fa-chart-line"></i></div>
+                                    <h4 class="text-lg font-semibold text-slate-900">Automated Plotting</h4>
+                                </div>
+                                <p class="mt-4 text-slate-500 text-sm">Parses the output data to automatically create pLDDT confidence plots and PAE heatmaps for each predicted chain.</p>
+                            </div>
+                        </div>
+                        <div class="phase-card p-6">
+                            <div>
+                                <div class="flex items-center gap-4">
+                                    <div class="phase-icon bg-emerald-500"><i class="fa-solid fa-cube"></i></div>
+                                    <h4 class="text-lg font-semibold text-slate-900">Interactive Visualization</h4>
+                                </div>
+                                <p class="mt-4 text-slate-500 text-sm">Renders the predicted 3D structure in a 3Dmol.js viewer and assembles all plots into a final, comprehensive HTML report.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 4 -->
+                <div id="phase4" class="mb-16">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-12 h-12 flex-shrink-0 rounded-full bg-violet-600 text-white flex items-center justify-center text-xl font-bold">4</div>
+                        <h3 class="text-2xl font-bold text-slate-800">Export & Archiving</h3>
+                    </div>
+                    <p class="mb-8 text-slate-600 max-w-3xl">The final phase provides convenient options for saving and exporting all generated results. Users can either back up their work to the cloud for persistent storage or download a complete package to their local machine for offline analysis and record-keeping.</p>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="phase-card p-6">
+                            <div>
+                                <div class="flex items-center gap-4">
+                                    <div class="phase-icon bg-violet-500"><i class="fa-brands fa-google-drive"></i></div>
+                                    <h4 class="text-lg font-semibold text-slate-900">Export to Drive</h4>
+                                </div>
+                                <p class="mt-4 text-slate-500 text-sm">Provides an option to copy the entire results folder—containing PDBs, plots, and logs—directly to a user's Google Drive.</p>
+                            </div>
+                        </div>
+                        <div class="phase-card p-6">
+                            <div>
+                                <div class="flex items-center gap-4">
+                                    <div class="phase-icon bg-violet-500"><i class="fa-solid fa-file-zipper"></i></div>
+                                    <h4 class="text-lg font-semibold text-slate-900">Download Package</h4>
+                                </div>
+                                <p class="mt-4 text-slate-500 text-sm">Packages all generated results into a single `.zip` file, allowing for easy download to a local computer.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Live Demo Section -->
+        <section id="demo" class="py-16 sm:py-24 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight">See it in Action</h3>
+                    <p class="mt-4 max-w-2xl mx-auto text-lg text-slate-500">Explore a sample output from a Boltz2-Notebook run. Interact with the 3D model and check the confidence plots.</p>
+                </div>
+                <div class="mt-12 max-w-4xl mx-auto">
+                    <div class="border-b border-gray-200">
+                        <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                            <button id="tab-btn-3d" class="tab-btn active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                3D Structure Viewer
+                            </button>
+                            <button id="tab-btn-plots" class="tab-btn text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                Confidence Plots
+                            </button>
+                            <button id="tab-btn-affinity" class="tab-btn text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                Affinity Prediction
+                            </button>
+                        </nav>
+                    </div>
+                    <div class="mt-8">
+                        <div id="tab-content-3d" class="tab-content active">
+                            <div class="w-full h-[500px] bg-slate-100 rounded-lg border relative" id="mol_viewer_container"></div>
+                        </div>
+                        <div id="tab-content-plots" class="tab-content">
+                            <div class="grid md:grid-cols-2 gap-8 items-center">
+                                <div class="w-full">
+                                    <h5 class="text-center font-medium text-slate-600 mb-2">pLDDT Score per Residue</h5>
+                                    <div class="chart-container h-64 md:h-80"><canvas id="plddtChartDemo"></canvas></div>
+                                </div>
+                                <div class="w-full">
+                                    <h5 class="text-center font-medium text-slate-600 mb-2">Predicted Aligned Error (PAE)</h5>
+                                    <div class="chart-container h-64 md:h-80"><canvas id="paeChartDemo"></canvas></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="tab-content-affinity" class="tab-content">
+                            <div class="bg-slate-50 p-8 rounded-lg text-center">
+                                <h4 class="font-semibold text-slate-800">Affinity Analysis</h4>
+                                <p class="text-sm text-slate-500 mt-2">A visual report showing binding probability and predicted IC₅₀ values.</p>
+                                <div class="mt-6 flex justify-center items-center text-left max-w-md mx-auto bg-white p-6 rounded-md shadow-inner">
+                                    <div class="text-center">
+                                        <div class="text-lg font-bold text-slate-700">Ensemble Model</div>
+                                        <div class="relative w-24 h-24 mx-auto mt-2">
+                                            <div class="absolute inset-0 rounded-full bg-gray-200"></div>
+                                            <div class="absolute inset-0 rounded-full" style="clip-path: polygon(50% 0%, 100% 0%, 100% 100%, 50% 100%, 50% 50%, 50% 50%); transform: rotate(135deg);">
+                                                <div class="w-full h-full rounded-full bg-indigo-500" style="transform: rotate(234deg);"></div>
+                                            </div>
+                                            <div class="absolute inset-2 rounded-full bg-white flex items-center justify-center text-2xl font-bold text-slate-800">85%</div>
+                                        </div>
+                                        <div class="mt-3 text-sm text-slate-500">High Confidence</div>
+                                        <div class="mt-4 text-slate-800 font-semibold">Predicted IC₅₀: 0.78 µM</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Citation Section -->
+        <section id="citation" class="py-16 sm:py-24">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight">Cite Us</h3>
+                    <p class="mt-4 max-w-2xl mx-auto text-lg text-slate-500">If you use Boltz2-Notebook in your research, please cite the following works.</p>
+                </div>
+                <div class="mt-12 max-w-3xl mx-auto space-y-8">
+                    <div id="cite-notebook" class="bg-white p-6 rounded-lg border">
+                        <h4 class="font-semibold text-slate-800">For the Boltz2-Notebook</h4>
+                        <p class="mt-2 text-sm text-slate-600">Tilewale, A. (2025). Boltz2-Notebook: A Google Colab platform for simplified protein structure prediction. GitHub. <a href="https://github.com/AtharvaTilewale/Boltz-Notebook" class="text-indigo-600 hover:underline">https://github.com/AtharvaTilewale/Boltz-Notebook</a></p>
+                        <div class="mt-4">
+                            <button onclick="copyToClipboard('cite-notebook')" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">Copy Citation</button>
+                            <span id="cite-notebook-feedback" class="ml-2 text-sm text-green-600 opacity-0 transition">Copied!</span>
+                        </div>
+                    </div>
+                    <div id="cite-model" class="bg-white p-6 rounded-lg border">
+                        <h4 class="font-semibold text-slate-800">For the Boltz2 Model</h4>
+                        <p class="mt-2 text-sm text-slate-600">Passaro, S., Corso, G., Wohlwend, J., et al. (2025). Boltz-2: Towards Accurate and Efficient Binding Affinity Prediction. bioRxiv. <a href="https://doi.org/10.1101/2025.06.14.659707" class="text-indigo-600 hover:underline">doi:10.1101/2025.06.14.659707</a></p>
+                        <div class="mt-4">
+                            <button onclick="copyToClipboard('cite-model')" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">Copy Citation</button>
+                            <span id="cite-model-feedback" class="ml-2 text-sm text-green-600 opacity-0 transition">Copied!</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="py-16 sm:py-24 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <img src="https://avatars.githubusercontent.com/u/106968431" alt="Atharva Tilewale" class="w-24 h-24 rounded-full mx-auto mb-4">
+                <h3 class="text-2xl font-bold text-slate-900">About the Author</h3>
+                <p class="mt-2 text-xl font-medium text-slate-700">Atharva Tilewale</p>
+                <p class="mt-2 max-w-xl mx-auto text-slate-500">A bioinformatics and computational biology enthusiast passionate about creating accessible tools for scientific research. Currently at Gujarat Biotechnology University.</p>
+                <div class="mt-6 flex justify-center gap-6">
+                    <a href="https://github.com/AtharvaTilewale" class="text-slate-400 hover:text-slate-500"><span class="sr-only">GitHub</span><i class="fa-brands fa-github text-2xl"></i></a>
+                    <a href="https://www.linkedin.com/in/atharvatilewale" class="text-slate-400 hover:text-slate-500"><span class="sr-only">LinkedIn</span><i class="fa-brands fa-linkedin text-2xl"></i></a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-800 text-slate-400">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm">
+            <p>&copy; 2025 Atharva Tilewale. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <div id="explanation-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modal-title" class="text-lg font-semibold text-slate-800">Explanation</h3>
+                <button id="modal-close-btn" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+            </div>
+            <div id="modal-body" class="text-slate-600"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Global State & API Config ---
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            let viewerInstance = null;
+
+            // --- Modal Logic ---
+            const modal = document.getElementById('explanation-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+            const showModal = (title) => {
+                modalTitle.textContent = title;
+                modalBody.innerHTML = '<div class="loader"></div>';
+                modal.classList.add('visible');
+            };
+            const hideModal = () => modal.classList.remove('visible');
+            modalCloseBtn.addEventListener('click', hideModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) hideModal();
+            });
+
+            // --- Gemini API Call ---
+            async function callGemini(prompt, retries = 3, delay = 1000) {
+                const payload = {
+                    contents: [{
+                        parts: [{
+                            text: prompt
+                        }]
+                    }]
+                };
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const result = await response.json();
+                    return result.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response.";
+                } catch (error) {
+                    if (retries > 0) {
+                        await new Promise(res => setTimeout(res, delay));
+                        return callGemini(prompt, retries - 1, delay * 2);
+                    }
+                    console.error("Error calling Gemini API:", error);
+                    return "An error occurred while fetching the explanation.";
+                }
+            }
+
+            // --- Event Listeners for Gemini Buttons ---
+            document.querySelectorAll('.gemini-btn').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const topic = button.dataset.topic;
+                    const analogy = button.dataset.analogy;
+                    const prompt = `You are a helpful science communicator. Explain the concept of "${topic}" in bioinformatics using a simple, clear analogy. The analogy should be similar in spirit to this example: "${analogy}". Keep your explanation concise and easy for a non-expert to understand.`;
+                    showModal(`Explaining: ${topic}`);
+                    const explanation = await callGemini(prompt);
+                    modalBody.innerHTML = `<p>${explanation.replace(/\n/g, '<br>')}</p>`;
+                });
+            });
+
+            // --- Tab navigation for Demo ---
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    const targetId = button.id.replace('btn', 'content');
+                    tabContents.forEach(content => {
+                        content.classList.toggle('active', content.id === targetId);
+                    });
+                    if (targetId === 'tab-content-3d' && !viewerInstance) {
+                        init3DViewer();
+                    }
+                });
+            });
+
+            // --- 3Dmol.js Viewer for Demo ---
+            function init3DViewer() {
+                const pdbData = `ATOM      1  N   ALA A   1      27.230  24.330  40.420  1.00 95.50           N  \nATOM      2  CA  ALA A   1      26.260  25.320  40.000  1.00 95.50           C  \nATOM      3  C   ALA A   1      26.960  26.600  39.520  1.00 95.50           C  \nATOM      4  O   ALA A   1      27.890  26.550  38.770  1.00 95.50           O  \nATOM      5  CB  ALA A   1      25.100  24.830  40.860  1.00 95.50           C  \nATOM      6  N   GLY A   2      26.540  27.750  40.000  1.00 93.70           N  \nATOM      7  CA  GLY A   2      27.140  28.990  39.600  1.00 93.70           C  \nATOM      8  C   GLY A   2      26.160  30.090  40.010  1.00 93.70           C  \nATOM      9  O   GLY A   2      25.040  29.860  39.670  1.00 93.70           O  \nATOM     10  N   PHE A   3      26.590  31.290  40.710  1.00 89.10           N  \nATOM     11  CA  PHE A   3      25.730  32.390  41.130  1.00 89.10           C  \nATOM     12  C   PHE A   3      26.460  33.680  41.560  1.00 89.10           C  \nATOM     13  O   PHE A   3      27.610  33.640  41.970  1.00 89.10           O  \nATOM     14  CB  PHE A   3      24.630  32.030  42.110  1.00 89.10           C  \nATOM     15  CG  PHE A   3      24.970  32.540  43.480  1.00 89.10           C  \nATOM     16  CD1 PHE A   3      24.130  33.380  44.130  1.00 89.10           C  \nATOM     17  CD2 PHE A   3      26.150  32.190  44.120  1.00 89.10           C  \nATOM     18  CE1 PHE A   3      24.460  33.860  45.380  1.00 89.10           C  \nATOM     19  CE2 PHE A   3      26.480  32.670  45.370  1.00 89.10           C  \nATOM     20  CZ  PHE A   3      25.640  33.500  46.010  1.00 89.10           C  \nEND`;
+                let element = document.getElementById('mol_viewer_container');
+                let config = {
+                    backgroundColor: 'white'
+                };
+                viewerInstance = $3Dmol.createViewer(element, config);
+                viewerInstance.addModel(pdbData, 'pdb');
+                viewerInstance.setStyle({}, {
+                    cartoon: {
+                        colorscheme: 'chain'
+                    }
+                });
+                viewerInstance.zoomTo();
+                viewerInstance.render();
+            }
+            init3DViewer(); // Initialize on load
+
+            // --- Chart.js Instances ---
+            const createChart = (canvasId, type, data, options) => {
+                const ctx = document.getElementById(canvasId).getContext('2d');
+                new Chart(ctx, {
+                    type,
+                    data,
+                    options
+                });
+            };
+
+            const plddtData = {
+                labels: Array.from({ length: 150 }, (_, i) => i + 1),
+                datasets: [{
+                    label: 'pLDDT Score',
+                    data: Array.from({ length: 150 }, (_, i) => (i > 30 && i < 120) ? 85 + Math.sin(i / 10) * 8 + Math.random() * 5 : 40 + Math.random() * 20),
+                    borderColor: '#0ea5e9',
+                    backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                    fill: true,
+                    pointRadius: 0,
+                    tension: 0.4,
+                    borderWidth: 2
+                }]
+            };
+            const plddtOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Confidence (0-100)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Residue Index'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: (ctx) => `Residue ${ctx.label}: ${ctx.parsed.y.toFixed(1)} pLDDT`
+                        }
+                    }
+                }
+            };
+            createChart('plddtChartDemo', 'line', plddtData, plddtOptions);
+
+            const paePoints = [];
+            const size = 20;
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    const error = Math.abs(i - j) < 3 ? Math.random() * 2 : 2 + (Math.sqrt(Math.pow(i - size / 2, 2) + Math.pow(j - size / 2, 2)) / size) * 20 + Math.random() * 5;
+                    paePoints.push({
+                        x: i,
+                        y: j,
+                        v: error
+                    });
+                }
+            }
+            const paeData = {
+                datasets: [{
+                    label: 'PAE (Å)',
+                    data: paePoints.map(p => ({
+                        x: p.x,
+                        y: p.y,
+                        r: 5
+                    })),
+                    backgroundColor: paePoints.map(p => `rgba(15, 118, 110, ${Math.max(0.1, 1 - (p.v / 25))})`)
+                }]
+            };
+            const paeOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grace: '5%',
+                        title: {
+                            display: true,
+                            text: 'Residue Index'
+                        }
+                    },
+                    x: {
+                        beginAtZero: true,
+                        grace: '5%',
+                        title: {
+                            display: true,
+                            text: 'Residue Index'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => `Error between residue ${paePoints[ctx.dataIndex].x} & ${paePoints[ctx.dataIndex].y}: ${paePoints[ctx.dataIndex].v.toFixed(1)} Å`
+                        }
+                    }
+                }
+            };
+            createChart('paeChartDemo', 'bubble', paeData, paeOptions);
+
+            // --- Citation copy ---
+            window.copyToClipboard = (elementId) => {
+                const textToCopy = document.querySelector(`#${elementId} p`).textContent;
+                navigator.clipboard.writeText(textToCopy);
+                const feedback = document.getElementById(`${elementId}-feedback`);
+                feedback.style.opacity = '1';
+                setTimeout(() => {
+                    feedback.style.opacity = '0';
+                }, 2000);
+            };
+        });
+    </script>
+</body>
+</html>
+
