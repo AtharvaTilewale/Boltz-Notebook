@@ -1,6 +1,6 @@
 body {
     background-color: #f1f5f9;
-    color: #1e293b;
+    color: #1e2-93b;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 .hero-bg {
@@ -100,12 +100,8 @@ body {
     margin: 2rem auto;
 }
 @keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 .tab-btn {
     transition: all 0.2s ease-in-out;
@@ -119,4 +115,25 @@ body {
 }
 .tab-content.active {
     display: block;
+}
+.faq-item details > summary {
+    list-style: none;
+}
+.faq-item details > summary::-webkit-details-marker {
+    display: none;
+}
+.faq-item .faq-icon {
+    transition: transform 0.2s;
+}
+.faq-item details[open] .faq-icon {
+    transform: rotate(45deg);
+}
+.animated-section {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.animated-section.visible {
+    opacity: 1;
+    transform: translateY(0);
 }
