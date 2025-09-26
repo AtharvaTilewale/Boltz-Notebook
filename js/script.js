@@ -81,20 +81,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 3Dmol.js Viewer for Demo ---
     function init3DViewer() {
-        const pdbData = `ATOM      1  N   ALA A   1      27.230  24.330  40.420  1.00 95.50           N  \nATOM      2  CA  ALA A   1      26.260  25.320  40.000  1.00 95.50           C  \nATOM      3  C   ALA A   1      26.960  26.600  39.520  1.00 95.50           C  \nATOM      4  O   ALA A   1      27.890  26.550  38.770  1.00 95.50           O  \nATOM      5  CB  ALA A   1      25.100  24.830  40.860  1.00 95.50           C  \nATOM      6  N   GLY A   2      26.540  27.750  40.000  1.00 93.70           N  \nATOM      7  CA  GLY A   2      27.140  28.990  39.600  1.00 93.70           C  \nATOM      8  C   GLY A   2      26.160  30.090  40.010  1.00 93.70           C  \nATOM      9  O   GLY A   2      25.040  29.860  39.670  1.00 93.70           O  \nATOM     10  N   PHE A   3      26.590  31.290  40.710  1.00 89.10           N  \nATOM     11  CA  PHE A   3      25.730  32.390  41.130  1.00 89.10           C  \nATOM     12  C   PHE A   3      26.460  33.680  41.560  1.00 89.10           C  \nATOM     13  O   PHE A   3      27.610  33.640  41.970  1.00 89.10           O  \nATOM     14  CB  PHE A   3      24.630  32.030  42.110  1.00 89.10           C  \nATOM     15  CG  PHE A   3      24.970  32.540  43.480  1.00 89.10           C  \nATOM     16  CD1 PHE A   3      24.130  33.380  44.130  1.00 89.10           C  \nATOM     17  CD2 PHE A   3      26.150  32.190  44.120  1.00 89.10           C  \nATOM     18  CE1 PHE A   3      24.460  33.860  45.380  1.00 89.10           C  \nATOM     19  CE2 PHE A   3      26.480  32.670  45.370  1.00 89.10           C  \nATOM     20  CZ  PHE A   3      25.640  33.500  46.010  1.00 89.10           C  \nEND`;
         let element = document.getElementById('mol_viewer_container');
         let config = {
             backgroundColor: 'white'
         };
         viewerInstance = $3Dmol.createViewer(element, config);
-        viewerInstance.addModel(pdbData, 'pdb');
-        viewerInstance.setStyle({}, {
-            cartoon: {
-                colorscheme: 'chain'
-            }
-        });
-        viewerInstance.zoomTo();
-        viewerInstance.render();
+
+        // Fetch PDB file from assets/pdb
+        fetch('assets/pdb/prot_lig.pdb')
+            .then(response => response.text())
+            .then(pdbData => {
+                viewerInstance.addModel(pdbData, 'pdb');
+                viewerInstance.setStyle({}, {
+                    cartoon: {
+                        colorscheme: 'chain'
+                    }
+                });
+                viewerInstance.zoomTo();
+                viewerInstance.render();
+            })
+            .catch(err => {
+                console.error('Failed to load PDB file:', err);
+            });
     }
     init3DViewer(); // Initialize on load
 
