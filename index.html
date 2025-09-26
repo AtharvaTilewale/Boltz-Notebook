@@ -403,7 +403,53 @@
                 </div>
             </div>
         </section>
-
+        <!-- FAQ Section -->
+        <section id="faq" class="animated-section py-16 sm:py-24">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight">Frequently Asked Questions</h3>
+                    <p class="mt-4 max-w-2xl mx-auto text-lg text-slate-500">Have questions? We've got answers.</p>
+                </div>
+                <div class="mt-12 max-w-3xl mx-auto space-y-4">
+                    <div class="faq-item bg-white p-4 rounded-lg border border-slate-200">
+                        <details>
+                            <summary class="flex justify-between items-center cursor-pointer">
+                                <span class="font-semibold text-slate-800">Do I need a powerful computer to run this?</span>
+                                <i class="faq-icon fa-solid fa-plus text-slate-500"></i>
+                            </summary>
+                            <p class="mt-4 text-slate-600 text-sm">No! The notebook is designed to run on Google Colab, which provides free access to powerful GPUs in the cloud. All you need is a web browser and a Google account.</p>
+                        </details>
+                    </div>
+                    <div class="faq-item bg-white p-4 rounded-lg border border-slate-200">
+                        <details>
+                            <summary class="flex justify-between items-center cursor-pointer">
+                                <span class="font-semibold text-slate-800">Is Boltz2-Notebook free to use?</span>
+                                <i class="faq-icon fa-solid fa-plus text-slate-500"></i>
+                            </summary>
+                            <p class="mt-4 text-slate-600 text-sm">Yes, this project is completely free and open-source, licensed under the MIT License. It builds upon the open-source Boltz2 model.</p>
+                        </details>
+                    </div>
+                    <div class="faq-item bg-white p-4 rounded-lg border border-slate-200">
+                        <details>
+                            <summary class="flex justify-between items-center cursor-pointer">
+                                <span class="font-semibold text-slate-800">What is pLDDT and PAE?</span>
+                                <i class="faq-icon fa-solid fa-plus text-slate-500"></i>
+                            </summary>
+                            <p class="mt-4 text-slate-600 text-sm">pLDDT (predicted Local Distance Difference Test) is a per-residue confidence score from 0-100. Higher scores mean the model is more confident about the local structure. PAE (Predicted Aligned Error) indicates the model's confidence in the relative position of two residues. Lower PAE values (in Ångströms) are better, suggesting high confidence in the overall domain structure.</p>
+                        </details>
+                    </div>
+                     <div class="faq-item bg-white p-4 rounded-lg border border-slate-200">
+                        <details>
+                            <summary class="flex justify-between items-center cursor-pointer">
+                                <span class="font-semibold text-slate-800">Can I predict the structure of a protein that is not in any database?</span>
+                                <i class="faq-icon fa-solid fa-plus text-slate-500"></i>
+                            </summary>
+                            <p class="mt-4 text-slate-600 text-sm">Yes. Boltz2, like other modern predictors, uses Multiple Sequence Alignments (MSAs) to learn evolutionary patterns. As long as it can find related protein sequences (homologs), it can make a confident prediction even for a novel protein whose structure has never been experimentally determined.</p>
+                        </details>
+                    </div>
+                </div>
+            </div>
+        </section>
         <!-- Citation Section -->
         <section id="citation" class="py-16 sm:py-24">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
