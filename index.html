@@ -470,6 +470,40 @@
                     <div class="faq-item bg-white p-4 rounded-lg border border-slate-200">
                         <details>
                             <summary class="flex justify-between items-center cursor-pointer">
+                                <span class="font-semibold text-slate-800">What are `recycling_steps` and `sampling_steps`?</span>
+                                <i class="faq-icon fa-solid fa-plus text-slate-500"></i>
+                            </summary>
+                            <p class="mt-4 text-slate-600 text-sm"><b>Recycling steps</b> control how many times the model's output is fed back into the network for refinement. More steps (e.g., 3-6) can improve accuracy but increase runtime. <b>Sampling steps</b> refer to the number of steps in the diffusion process that generates the structure from noise. Higher values (e.g., 100-200) can lead to higher-quality structures but also take longer.</p>
+                        </details>
+                    </div>
+                    <div class="faq-item bg-white p-4 rounded-lg border border-slate-200">
+                        <details>
+                            <summary class="flex justify-between items-center cursor-pointer">
+                                <span class="font-semibold text-slate-800">How are the IC₅₀ and ΔG values calculated?</span>
+                                <i class="faq-icon fa-solid fa-plus text-slate-500"></i>
+                            </summary>
+                            <div class="mt-4 text-slate-600 text-sm space-y-3">
+                                <p>The Boltz2 model does not directly predict the IC₅₀ or ΔG values. Instead, it predicts a core value called `affinity_pred_value`, which represents the <strong>log₁₀(IC₅₀)</strong> in micromolar (µM) units.</p>
+                                <p>The notebook then uses this prediction to derive the final metrics:</p>
+                                <ul class="list-disc list-inside space-y-2 pl-2">
+                                    <li>
+                                        <strong>IC₅₀ Calculation:</strong> The IC₅₀ value is calculated by taking 10 to the power of the model's prediction.
+                                        <br>
+                                        <code class="text-xs bg-slate-100 p-1 rounded">IC₅₀ (µM) = 10 ^ affinity_pred_value</code>
+                                    </li>
+                                    <li>
+                                        <strong>ΔG Calculation:</strong> The Gibbs free energy (ΔG), which represents the spontaneity of binding, is derived from the predicted `affinity_pred_value` using the following formula found in the analysis script:
+                                        <br>
+                                        <code class="text-xs bg-slate-100 p-1 rounded">ΔG (kcal/mol) = (6 - affinity_pred_value) * 1.364</code>
+                                    </li>
+                                </ul>
+                                <p>This approach allows the model to predict a logarithmic value, which is often more stable for machine learning, while the notebook provides the final, interpretable values for scientific analysis.</p>
+                            </div>
+                        </details>
+                    </div>
+                    <div class="faq-item bg-white p-4 rounded-lg border border-slate-200">
+                        <details>
+                            <summary class="flex justify-between items-center cursor-pointer">
                                 <span class="font-semibold text-slate-800">What is pLDDT and PAE?</span>
                                 <i class="faq-icon fa-solid fa-plus text-slate-500"></i>
                             </summary>
