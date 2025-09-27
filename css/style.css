@@ -1,13 +1,77 @@
+/* style.css
+  This file adds responsive refinements to the existing Tailwind CSS structure.
+  It is designed to be linked from the main HTML file.
+*/
+
+/* --- Global Styles & Typography --- */
 body {
     background-color: #f1f5f9;
     color: #1e293b;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
+
 .hero-bg {
     background-color: #0c0a09;
     background-image: radial-gradient(#1e293b 1px, transparent 1px);
     background-size: 20px 20px;
 }
+
+/* --- Mobile First Refinements (for screens smaller than 640px) --- */
+@media (max-width: 640px) {
+    /* Adjust hero section typography for small screens */
+    .hero-bg h2 {
+        font-size: 2.25rem; /* Equivalent to text-4xl */
+        line-height: 2.5rem;
+    }
+
+    .hero-bg p {
+        font-size: 1rem; /* Equivalent to text-base */
+    }
+
+    /* Adjust section header typography */
+    section h3 {
+        font-size: 1.875rem; /* Equivalent to text-3xl */
+        line-height: 2.25rem;
+    }
+
+    /* Reduce vertical padding on sections to make content more compact */
+    section {
+        padding-top: 3rem;
+        padding-bottom: 3rem;
+    }
+
+    /* Make tab navigation wrap and center on small screens to prevent overflow */
+    nav[aria-label="Tabs"] {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    /* Reduce the height of the 3D viewer on mobile */
+    #mol_viewer_container {
+        height: 400px;
+    }
+
+    /* Adjust chart heights for better fit on mobile */
+    .chart-container {
+        height: 300px;
+    }
+}
+
+/* --- Tablet Refinements (for screens between 640px and 768px) --- */
+@media (min-width: 641px) and (max-width: 768px) {
+    /* Slightly reduce hero heading size for tablets */
+    .hero-bg h2 {
+        font-size: 3rem; /* Equivalent to text-5xl */
+        line-height: 1;
+    }
+    
+    /* Adjust 3D viewer height for tablets */
+    #mol_viewer_container {
+        height: 450px;
+    }
+}
+
+/* --- General Interactive & UI Element Styles --- */
 .phase-card {
     background-color: white;
     border-radius: 0.75rem;
@@ -31,23 +95,12 @@ body {
     font-size: 1.25rem;
     color: white;
 }
-.chart-container {
-    position: relative;
-    width: 100%;
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
-    height: 350px;
-    max-height: 400px;
-}
 .gemini-btn {
     margin-top: auto;
     padding-top: 0.75rem;
     border-top: 1px solid #f1f5f9;
     background: none;
-    border-bottom: none;
-    border-left: none;
-    border-right: none;
+    border: none;
     text-align: left;
     font-size: 0.875rem;
     font-weight: 500;
