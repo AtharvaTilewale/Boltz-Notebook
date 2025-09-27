@@ -232,25 +232,19 @@
                 <!-- Phase 2 -->
                 <div id="phase2" class="mb-16">
                     <div class="flex items-center gap-4 mb-6">
-                        <div
-                            class="w-12 h-12 flex-shrink-0 rounded-full bg-amber-600 text-white flex items-center justify-center text-xl font-bold">
+                        <div class="w-12 h-12 flex-shrink-0 rounded-full bg-amber-600 text-white flex items-center justify-center text-xl font-bold">
                             2</div>
                         <h3 class="text-2xl font-bold text-slate-800">Core Prediction Engine</h3>
                     </div>
-                    <p class="mb-8 text-slate-600 max-w-3xl">This is the automated, computational core of the pipeline.
-                        Boltz2 takes the configuration file and begins the intensive process of searching for
-                        evolutionary data and then running the deep learning model to predict the 3D structure.</p>
-                    <div class="grid md:grid-cols-2 gap-8">
+                    <p class="mb-8 text-slate-600 max-w-3xl">This is the automated, computational core of the pipeline. Boltz2 takes the configuration file and begins the intensive process of searching for evolutionary data and then running the deep learning model to predict the 3D structure.</p>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                         <div class="phase-card p-6">
                             <div>
                                 <div class="flex items-center gap-4">
-                                    <div class="phase-icon bg-amber-500"><i
-                                            class="fa-solid fa-magnifying-glass-chart"></i></div>
+                                    <div class="phase-icon bg-amber-500"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
                                     <h4 class="text-lg font-semibold text-slate-900">MSA Search</h4>
                                 </div>
-                                <p class="mt-4 text-slate-500 text-sm">Boltz2 connects to online bioinformatics servers
-                                    to automatically fetch Multiple Sequence Alignments (MSAs), gathering crucial
-                                    evolutionary context for the model.</p>
+                                <p class="mt-4 text-slate-500 text-sm">Boltz2 connects to online bioinformatics servers to automatically fetch Multiple Sequence Alignments (MSAs), gathering crucial evolutionary context for the model.</p>
                             </div>
                         </div>
                         <div class="phase-card p-6">
@@ -259,9 +253,16 @@
                                     <div class="phase-icon bg-amber-500"><i class="fa-solid fa-brain"></i></div>
                                     <h4 class="text-lg font-semibold text-slate-900">Structure Prediction</h4>
                                 </div>
-                                <p class="mt-4 text-slate-500 text-sm">The deep learning model uses the MSA and a
-                                    diffusion process to generate 3D coordinates. It iteratively refines the structure
-                                    through recycling steps for higher accuracy.</p>
+                                <p class="mt-4 text-slate-500 text-sm">The deep learning model uses the MSA and a diffusion process to generate 3D coordinates. It iteratively refines the structure through recycling steps for higher accuracy.</p>
+                            </div>
+                        </div>
+                        <div class="phase-card p-6">
+                            <div>
+                                <div class="flex items-center gap-4">
+                                    <div class="phase-icon bg-amber-500"><i class="fa-solid fa-magnet"></i></div>
+                                    <h4 class="text-lg font-semibold text-slate-900">Binding Affinity Prediction</h4>
+                                </div>
+                                <p class="mt-4 text-slate-500 text-sm">A specialized model predicts the binding strength (IC₅₀) and interaction probability for a given ligand, providing key insights for drug discovery.</p>
                             </div>
                         </div>
                     </div>
